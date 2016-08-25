@@ -1,0 +1,1423 @@
+<html>
+<head>
+
+<title>DHER 12/13 Report</title>
+
+<style>
+.gridTable td {
+	text-align: center;
+	width: 150px;
+	line-height: 170%;
+	border-color: #365F91;
+	border-style: solid;
+	border-width: thin;
+}
+
+.gridTable th {
+	text-align: center;
+	width: 150px;
+	line-height: 170%;
+	background-color: #FFFFFF;
+	border-color: #365F91;
+	border-style: solid;
+	border-width: thin;
+}
+
+svg {
+  border: 1px solid #ccc;
+}
+
+.axis line,
+.axis path {
+  shape-rendering: crispEdges;
+  fill: transparent;
+  stroke: #555;
+}
+.axis text {
+  font-size: 11px;
+}
+
+
+.bar {
+  fill-opacity: 0.5;
+}
+.bar.left {
+  fill: steelblue;
+}
+.bar.right {
+  fill: firebrick;
+}
+ 
+.break { page-break-before: always; }
+</style>
+
+
+<link rel="stylesheet" type="text/css"
+	href="http://dhis2-cdn.org/v218/ext/resources/css/ext-plugin-gray.css" />
+<script src="http://dhis2-cdn.org/v218/ext/ext-all.js"></script>
+<script src="http://dhis2-cdn.org/v218/plugin/chart.js"></script>
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+<script type="text/javascript">
+
+	var orgGranChildren = new Array();
+	var reportDate = dhis2.report.date;
+	var period = reportDate.substring(0,4);
+	console.log(period);
+
+	var prevPeriod = parseInt(period) - 1;
+	prevPeriod = prevPeriod.toString(); 
+	var popPeriod = '2011';
+	
+	var orgUnitChildren = dhis2.report.organisationUnitChildren;
+	var orgUnit = dhis2.report.organisationUnit;
+	
+	//Thousand seperator for values .... Need to add this as a parameter in DHIS2 Analytics API
+	function formatCurrency(nStr) {
+	    nStr += '';
+	    x = nStr.split('.');
+	    x1 = x[0];
+	    x2 = x.length > 1 ? '.' + x[1] : '';
+	    var rgx = /(\d+)(\d{3})/;
+	    while (rgx.test(x1)) {
+	            x1 = x1.replace(rgx, '$1' + ' ' + '$2');
+	    }
+	    return x1 + x2;
+	}
+	
+	function setRowValue(rvalue){
+		var val = 0;
+		if (rvalue!=""){
+			val = parseFloat(rvalue);	
+		}
+		return val;
+	}
+	
+	function buildQuery(obj) {
+        var Result= '';
+        if(typeof(obj)== 'object') {
+            jQuery.each(obj, function(key, value) {
+                Result+= (Result) ? '&' : '';
+                if(typeof(value)== 'object' && value.length) {
+                    for(var i=0; i<value.length; i++) {
+                        Result+= [key+'[]', encodeURIComponent(value[i])].join('=');
+                    }
+                } else {
+                    Result+= [key, encodeURIComponent(value)].join('=');
+                }
+            });
+        }
+        return Result;
+    }
+	
+	function getOrgName(oId){
+		var oName;
+		$.getJSON('../api/organisationUnits/' + oId	+ '.json', function(data) {
+			oName = data.name;
+		});
+		return oName;
+	}
+	
+	google.load("visualization", "1", {packages:["corechart"]});
+	google.setOnLoadCallback(drawPopPyramid);
+
+	function drawPopPyramid(dataArray){
+		
+		var data = google.visualization.arrayToDataTable(dataArray);
+		 
+        var chart = new google.visualization.BarChart(document.getElementById('pyramid'));
+
+        var options = {
+            isStacked: true,
+            hAxis: {
+                format: ';'
+            },
+            vAxis: {
+                direction: -1
+            }
+        };
+
+
+        var formatter = new google.visualization.NumberFormat({
+            pattern: ';'
+        });
+
+        formatter.format(data, 2)
+
+        chart.draw(data, options);
+    }
+	
+	
+	$(document).ready(
+		
+		
+			
+		function() {
+			
+		var orgUnits = "";
+		var base = '../';
+
+		var orgUnitsArr = new Array();
+		console.log("ORG UNIT :" + orgUnit.id);
+		
+		//get values here 
+		
+		//$.getJSON("../api/analytics.json?dimension=dx:sz5LgDcdijl;li8ccQPDv0l;c7aVsaDHZ12;JDeT6g8lNUb;qMett5eZrwb;IjNVlBEQ45q;PZklmUKzT9I;q4J1adZFnuG;VySGuug16er;WKUTU1UOX7W;BK3CCAqLqfe;X6g3V0qZodV;UaEQQOttUV2;nSS0Qzcpf7d;ngDOqfnl1ha;XbFJh751eKn;hhiC5zoyYo0;QeHuLomDQi1;wZRPNefNTvr;rXw4ioY0FmW;oE8pdgPsFRH;d5MqZnuONiv;Avs1ttB7q6k;uUyIB0THc9j;Hzr5WplOqx8;fFSwlSMONoi;ocUKVOwbckd;fqdW4j2T5dq;tTc4dhrMcH6;fm7JyBwcWMg;WQbDy2UL8xJ;h1NB72VGBVB;p590ifm6ybn;CPCb2ubz5GN;kH0yFvUw866;mVCQYkO5mww;u8T09ttIN6E;IpcV008cf8k;&filter=ou:"
+		$.getJSON("../api/analytics.json?dimension=dx:gsk4nJH4rmH;WwD8pAQagYa;qMett5eZrwb;IjNVlBEQ45q;PZklmUKzT9I;q4J1adZFnuG;VySGuug16er;WKUTU1UOX7W;BK3CCAqLqfe;X6g3V0qZodV;UaEQQOttUV2;nSS0Qzcpf7d;ngDOqfnl1ha;XbFJh751eKn;hhiC5zoyYo0;QeHuLomDQi1;wZRPNefNTvr;rXw4ioY0FmW;oE8pdgPsFRH;d5MqZnuONiv;Avs1ttB7q6k;uUyIB0THc9j;Hzr5WplOqx8;fFSwlSMONoi;ocUKVOwbckd;fqdW4j2T5dq;tTc4dhrMcH6;fm7JyBwcWMg;WQbDy2UL8xJ;h1NB72VGBVB;p590ifm6ybn;CPCb2ubz5GN;kH0yFvUw866;mVCQYkO5mww;u8T09ttIN6E;IpcV008cf8k;&filter=ou:"
+		+ orgUnit.id + "&filter=pe:" + period, function(data){
+					 
+				  //var male_under1, female_under1 = 0;
+          		  var male_0_5, female_0_5 = 0;
+          		  var male_5_9, female_5_9 = 0;
+          		  var male_10_14, female_10_14 = 0;
+          		  var male_15_19, female_15_19 = 0;
+          		  var male_20_24, female_20_24 = 0;
+          		  var male_25_29, female_25_29 = 0;
+          		  var male_30_34, female_30_34 = 0;
+          		  var male_35_39, female_35_39 = 0;
+          		  var male_40_44, female_40_44 = 0;
+          		  var male_45_49, female_45_49 = 0;
+          		  var male_50_54, female_50_54 = 0;
+          		  var male_55_59, female_55_59 = 0;
+          		  var male_60_64, female_60_64 = 0;
+          		  var male_65_69, female_65_69 = 0;
+          		  var male_70_74, female_70_74 = 0;
+          		  var male_75_79, female_75_79 = 0;
+          		  var male_over_80, female_over_80 = 0;
+          		  
+				  $.each( data, function( index, row ) {
+						  
+						  if (index == 'rows'){
+								 for (var i=0, il=row.length; i<il; i++) {
+									 
+									 ageValID = row[i][0];
+									 ageVal = parseInt(row[i][1]);
+									 
+									 switch(ageValID){
+									 
+									 /*
+				    				 case 'sz5LgDcdijl':
+				    					 male_under1 = ageVal;
+				    					 break;
+				    				 case 'li8ccQPDv0l':
+				    					 female_under1 = ageVal;
+				    					 break;
+				    				*/	 
+				    				// case 'c7aVsaDHZ12':
+				    				 case 'gsk4nJH4rmH':	 
+				    					 male_0_5 = ageVal;
+				    					 break;
+				    				// case 'JDeT6g8lNUb':
+				    				case 'WwD8pAQagYa':
+				    					 female_0_5 = ageVal;
+				    					 break;
+				    				
+				    				 case 'qMett5eZrwb':
+				    					 male_5_9 = ageVal;
+				    					 break;
+				    				 case 'IjNVlBEQ45q':
+				    					 female_5_9 = ageVal;
+				    					 break;
+				    				
+				    				 case 'PZklmUKzT9I':
+				    					 male_10_14 = ageVal;
+				    					 break;
+				    				 case 'q4J1adZFnuG':
+				    					 female_10_14 = ageVal;
+				    					 break;
+				    				
+				    				 case 'VySGuug16er':
+				    					 male_15_19 = ageVal;
+				    					 break;
+				    				 case 'WKUTU1UOX7W':
+				    					 female_15_19 = ageVal;
+				    					 break;
+				    					 
+				    				 case 'UaEQQOttUV2':
+				    					 male_20_24 = ageVal;
+				    					 break;
+				    				 case 'nSS0Qzcpf7d':
+				    					 female_20_24 = ageVal;
+				    					 break;
+				    					 
+				    				 case 'ngDOqfnl1ha':
+				    					 male_25_29 = ageVal;
+				    					 break;
+				    				 case 'XbFJh751eKn':
+				    					 female_25_29 = ageVal;
+				    					 break;
+				    					 
+				    				 case 'hhiC5zoyYo0':
+				    					 male_30_34 = ageVal;
+				    					 break;
+				    				 case 'QeHuLomDQi1':
+				    					 female_30_34 = ageVal;
+				    					 break;
+				    				
+				    				 case 'wZRPNefNTvr':
+				    					 male_35_39 = ageVal;
+				    					 break;
+				    				 case 'rXw4ioY0FmW':
+				    					 female_35_39 = ageVal;
+				    					 break;
+				    					 
+				    				 case 'oE8pdgPsFRH':
+				    					 male_40_44 = ageVal;
+				    					 break;
+				    				 case 'd5MqZnuONiv':
+				    					 female_40_44 = ageVal;
+				    					 break;
+				    					
+				    				 case 'Avs1ttB7q6k':
+				    					 male_45_49 = ageVal;
+				    					 break;
+				    				 case 'uUyIB0THc9j':
+				    					 female_45_49 = ageVal;
+				    					 break;
+				    					 
+				    				 case 'Hzr5WplOqx8':
+				    					 male_50_54 = ageVal;
+				    					 break;
+				    				 case 'fFSwlSMONoi':
+				    					 female_50_54 = ageVal;
+				    					 break;
+				    					 
+				    				 case 'ocUKVOwbckd':
+				    					 male_55_59 = ageVal;
+				    					 break;
+				    				 case 'fqdW4j2T5dq':
+				    					 female_55_59 = ageVal;
+				    					 break;	 
+				    				
+				    				 case 'tTc4dhrMcH6':
+				    					 male_60_64 = ageVal;
+				    					 break;
+				    				 case 'fm7JyBwcWMg':
+				    					 female_60_64 = ageVal;
+				    					 console.log("60 mmm " + ageVal);
+				    					 break;
+				    				
+				    				 case 'WQbDy2UL8xJ':
+				    					 male_65_69 = ageVal;
+				    					 break;
+				    				 case 'h1NB72VGBVB':
+				    					 female_65_69 = ageVal;
+				    					 break;
+				    					 
+				    				 case 'p590ifm6ybn':
+				    					 male_70_74 = ageVal;
+				    					 break;
+				    				 case 'CPCb2ubz5GN':
+				    					 female_70_74 = ageVal;
+				    					 break;
+				    					 
+				    				 case 'kH0yFvUw866':
+				    					 male_75_79 = ageVal;
+				    					 break;
+				    				 case 'mVCQYkO5mww':
+				    					 female_75_79 = ageVal;
+				    					 break;
+				    				
+				    				 case 'u8T09ttIN6E':
+				    					 male_over_80 = ageVal;
+				    					 break;
+				    				 case 'IpcV008cf8k':
+				    					 female_over_80 = ageVal;
+				    					 break;	 
+				    					 
+				    				default: 
+		    							//console.log('nada');
+		    							break;
+					    			 }//switch
+								 }
+							 }
+						  
+						  
+					  });
+				  
+				  popPyramidArray = [ ['Age', 'Male', 'Female'],
+				                     // ['0-1 years', male_under1, (female_under1 * -1)],
+				            		  ['under 5 years', male_0_5, (female_0_5 * -1)],
+				            		  ['5-9 years', male_5_9, (female_5_9 * -1)],
+				            		  ['10-14 years', male_10_14, (female_10_14 * -1)],
+				            		  ['15-19 years', male_15_19, (female_15_19 * -1)],
+				            		  ['20-24 years', male_20_24, (female_20_24 * -1)],
+				            		  ['25-29 years', male_25_29, (female_25_29 * -1)],
+				            		  ['30-34 years', male_30_34, (female_30_34 * -1)],
+				            		  ['35-39 years', male_35_39, (female_35_39 * -1)],
+				            		  ['40-44 years', male_40_44, (female_40_44 * -1)],
+				            		  ['45-49 years', male_45_49, (female_45_49 * -1)],
+				            		  ['50-54 years', male_50_54, (female_50_54 * -1)],
+				            		  ['55-59 years', male_55_59, (female_55_59 * -1)],
+				            		  ['60-64 years', male_60_64, (female_60_64 * -1)],
+				            		  ['65-69 years', male_65_69, (female_65_69 * -1)],
+				            		  ['70-74 years', male_70_74, (female_70_74 * -1)],
+				            		  ['75-79 years', male_75_79, (female_75_79 * -1)],
+				            		  ['80+ years', male_over_80,(female_over_80* -1)]
+				  ];
+				  
+				 drawPopPyramid(popPyramidArray);
+		 });
+		
+		var arr = [ 
+		            ["mbKZxb5Rc4R","Area per square kilometre", ""],
+		            ["ryOZheI87U3","Household head age 10-15 years", ""],
+					["iKdE3yL09wJ","Household head age 16-19 years", ""],
+					["O5YvogHSRA2","Household head age 20-24 years", ""],
+					["ZgGHUjgu8rJ","Household head age 25-65 years", ""],
+					["LBLOdUp5gkY","Household head age 66-84 years", ""],
+					["EsYc1Hn2U8u","Household head age 85 years and older", ""],
+					["e4wNP6ntOdG","Household head gender - Female", ""],
+					["qXRfCeTcFLn","Household head gender - Male", ""],
+					["WgZkA0wwmLV","Household head population group - Black African", ""],
+					["EQ3w84L4LLJ","Household head population group - Coloured", ""],
+					["Zz5LSwfKsgo","Household head population group - Indian or Asian", ""],
+					["WRVd7RS42Eo","Household head population group - Other", ""],
+					["OViswZWaHwy","Household head population group - White", ""]
+		           
+		           ]
+		
+		$.ajax({
+		    type: "GET",
+		    url: "../api/dataValueSets?dataSet=QaYj3vnnMKW&orgUnit=" + orgUnit.id + "&period="+ popPeriod,
+		    dataType: "xml",
+		    success: function(xml) {
+		    	
+		    	$(xml).find('dataValue').each(function(i,j){
+		           var dataElement = $(j).attr('dataElement');
+		           var value = $(j).attr('value');
+		           for (var i=0, il=arr.length; i<il; i++) {
+		        		if (arr[i][0] == dataElement){
+		        			 arr[i][2] = value;	
+		        		}
+		           }
+		           
+		        });
+		    	
+		    	var t;
+				t += '<tbody>';
+				for (var i=0, il=arr.length; i<il; i++) {
+					t += '<tr><td style="text-align:left">'+arr[i][1]+'</td><td>'+ arr[i][2] +'</td></tr>';	
+				}
+				 t +='<t/body>';
+				
+				 $('table#dmPopDemographicData').append(t);
+		    }
+		});
+		
+		//$("#dmPopDemographicData").load("../api/analytics.html?dimension=dx:mbKZxb5Rc4R;ryOZheI87U3;iKdE3yL09wJ;O5YvogHSRA2;ZgGHUjgu8rJ;LBLOdUp5gkY;EsYc1Hn2U8u;e4wNP6ntOdG;qXRfCeTcFLn;WgZkA0wwmLV;EQ3w84L4LLJ;Zz5LSwfKsgo;WRVd7RS42Eo;OViswZWaHwy&dimension=ou:" 
+		//+ orgUnit.id + "&filter=pe:2011&tableLayout=true&columns=ou&rows=dx");
+		
+		//NEED TO GENERATE THESE USING A PLUGIN
+		//$("#pyramid2012").attr('src', '../images/pop_pyramids/2012/'+ orgUnit.id + '.PNG');
+		$("#pyramid").attr('src', '../images/pop_pyramids/'+ period + '/'+ orgUnit.id + '.PNG');
+
+		var orgUnitsArr2 = [];
+		$.each(orgUnitChildren, function(index, orgUnit) {
+			orgUnitsArr2[index] = [];
+			orgUnits += orgUnit.id + ";";
+			orgUnitsArr.push(orgUnit.id);
+			orgUnitsArr2[index].push(orgUnit.id, orgUnit.name);
+		});
+
+		orgUnits = orgUnits.substring(0, (orgUnits.length - 1));
+
+		$.getJSON('../api/organisationUnits/' + orgUnit.id	+ '.json', function(data) {
+			$('#selectedProvince').append('Province : ' + data.parent.name	+ '');
+
+			$('#selectedDistrict').append('District : ' + data.name + '');
+		});
+		
+		console.log("ORGs "+ orgUnits);
+		
+		// co SD HeadCount = bCAyY57RZJq
+		//SD Number facilities (OYclkQYRECs)
+		var params = {
+				//periodId : "2013",
+				periodId : period,
+		        dataSetId : "juOFPkz4Up6",
+		        organisationUnitId : orgUnit.id,
+		        multiOrganisationUnit: true,
+		};
+		
+    
+		 $.ajax( {
+		    	url: '../dhis-web-dataentry/getDataValues.action',
+		    	data: params,
+			    dataType: 'json',
+			   
+			    success: function( json ) // online
+			    {
+			    	
+			    	var provArr = [];
+			    	var LGArr = [];
+			    	
+			    	for (var k=0, kl=orgUnitsArr2.length; k<kl; k++) {
+			    		var headCDC = "", headCHC = "", headClinic = "", headHPost = "", headMobile = "", headSatellite = "";
+			        	var facilityCDC = "", facilityCHC = "", facilityClinic = "", facilityHPost = "", facilityMobile = "", facilitySatellite = "";
+			        	
+			        	var LGheadCDC = "", LGheadCHC = "", LGheadClinic = "", LGheadHPost = "", LGheadMobile = "", LGheadSatellite = "";
+			        	var LGfacilityCDC = "", LGfacilityCHC = "", LGfacilityClinic = "", LGfacilityHPost = "", LGfacilityMobile = "", LGfacilitySatellite = "";
+			        	
+			    	 $.each( json.dataValues, function( i, value ) {
+			    		 
+			    		 var valueID = value.id;
+			    		 
+			    		 var orgText = orgUnitsArr2[k][0];
+			    		 var orgName = orgUnitsArr2[k][1];
+			    		 provArr[k]=[];
+			    		 LGArr[k]=[];
+			    		 
+			    			 switch(valueID){
+			    				 case orgText +'-OYclkQYRECs-WMBkzpntLFf':
+			    					 facilityCDC = value.val;
+	   								break;
+							 	case orgText+"-OYclkQYRECs-H0PJyCt0MUR":
+							 		facilityCHC = value.val;
+	   								break;
+							 	case orgText+"-OYclkQYRECs-zh1WfgipdAC": 
+							 		facilityClinic = value.val;
+	  					 			break;
+		 						 case orgText+"-OYclkQYRECs-NdSzIfDp8ZJ":
+		 							facilityHPost = value.val;
+	   								break;
+							 	case orgText +'-OYclkQYRECs-pucDYFNckPN':
+							 		facilityMobile = value.val;
+	  								break;
+							 	case orgText+"-OYclkQYRECs-BBKLZcjdDj9":
+							 		facilitySatellit = value.val;
+	   								break;
+	   							
+							 	case orgText+"-bCAyY57RZJq-WMBkzpntLFf":
+							 		headCDC = value.val;
+	   								break;
+							 	case orgText+"-bCAyY57RZJq-H0PJyCt0MUR":
+							 		headCHC = value.val;
+	   								break;
+								case orgText+"-bCAyY57RZJq-zh1WfgipdAC": 
+									headClinic = value.val;
+	  					 			break;
+		 					 	case orgText+"-bCAyY57RZJq-NdSzIfDp8ZJ":
+		 					 		headHPost = value.val;
+	   								break;
+							 	case orgText+"-bCAyY57RZJq-pucDYFNckPN":
+							 		headMobile = value.val;
+	  								break;
+							 	case orgText+"-bCAyY57RZJq-BBKLZcjdDj9":
+							 		headSatellite = value.val;
+	   								break;
+	   								
+	   							//LG
+							 	 case orgText +'-OYclkQYRECs-NqbSdIDLcW1':
+			    					 LGfacilityCDC = value.val;
+	   								break;
+							 	case orgText+"-OYclkQYRECs-uRLwz3anogU":
+							 		LGfacilityCHC = value.val;
+	   								break;
+							 	case orgText+"-OYclkQYRECs-ysgXwuhVN06": 
+							 		LGfacilityClinic = value.val;
+	  					 			break;
+		 						 case orgText+"-OYclkQYRECs-wrelu8cMYp4":
+		 							LGfacilityHPost = value.val;
+	   								break;
+							 	case orgText +'-OYclkQYRECs-Me30WrVB5HY':
+							 		LGfacilityMobile = value.val;
+	  								break;
+							 	case orgText+"-OYclkQYRECs-xZDdsDh0N10":
+							 		LGfacilitySatellite = value.val;
+	   								break;
+	   							
+							 	case orgText+"-bCAyY57RZJq-NqbSdIDLcW1":
+							 		LGheadCDC = value.val;
+	   								break;
+							 	case orgText+"-bCAyY57RZJq-uRLwz3anogU":
+							 		LGheadCHC = value.val;
+	   								break;
+								case orgText+"-bCAyY57RZJq-ysgXwuhVN06": 
+									LGheadClinic = value.val;
+	  					 			break;
+		 					 	case orgText+"-bCAyY57RZJq-wrelu8cMYp4":
+		 					 		LGheadHPost = value.val;
+	   								break;
+							 	case orgText+"-bCAyY57RZJq-Me30WrVB5HY":
+							 		LGheadMobile = value.val;
+	  								break;
+							 	case orgText+"-bCAyY57RZJq-xZDdsDh0N10":
+							 		LGheadSatellite = value.val;
+	   								break;	
+
+								default: 
+    								//console.log('category combo not found ' + valueID);
+    								break;
+			    			 }//switch
+			    			 
+			    			provArr[k].push(orgName, headCDC, facilityCDC, headCHC, facilityCHC,headClinic, facilityClinic, headHPost, facilityHPost, headMobile, facilityMobile, headSatellite, facilitySatellite);
+			    			LGArr[k].push(orgName, LGheadCDC, LGfacilityCDC, LGheadCHC, LGfacilityCHC, LGheadClinic, LGfacilityClinic, LGheadHPost, LGfacilityHPost, LGheadMobile, LGfacilityMobile, LGheadSatellite, LGfacilitySatellite); 
+			    		 
+			    		 //console.log (value.id + value.val);
+					}); //each
+			    	 
+					
+			    	}//for orgUnitArray
+			    	
+			    	 var pt = '<tbody>';
+			    	//dmHeadCountSubdistrict - Province
+					  for (var i=0, il=provArr.length; i<il; i++) {
+						
+						pt += '<tr>';
+						
+					    pt += '<td style="text-align:left">'+ provArr[i][0] +'</td><td>'+provArr[i][1] +'</td><td>'+ provArr[i][2] +'</td><td>'+ provArr[i][3] +'</td><td>'+ provArr[i][4] +
+						  '</td><td>'+ provArr[i][5] +'</td><td>'+ provArr[i][6] +'</td><td>'+ provArr[i][7] +'</td><td>'+ provArr[i][8] +'</td><td>'+ provArr[i][9] +
+						  '</td><td>'+ provArr[i][10] +'</td><td>'+ provArr[i][11] +'</td><td>'+ provArr[i][12] +'</td></tr>';
+					   }
+					    pt +='<t/body>';
+						$('table#dmHeadCountSubdistrictProv').append(pt);
+					
+					//TO FIX
+					//dmHeadCountSubdistrict - LG
+					 var lt ='<tbody>';
+					  for (var g=0, gl=LGArr.length; g<gl; g++) {
+					  lt += '<tr>';
+							       
+					  lt += '<td style="text-align:left">'+LGArr[g][0]+'</td><td>'+LGArr[g][1] +'</td><td>'+ LGArr[g][2] +'</td><td>'+ LGArr[g][3] +'</td><td>'+ LGArr[g][4] +
+						  '</td><td>'+ LGArr[g][5] +'</td><td>'+ LGArr[g][6] +'</td><td>'+ LGArr[g][7] +'</td><td>'+ LGArr[g][8] +'</td><td>'+ LGArr[g][9] +
+						  '</td><td>'+ LGArr[g][10] +'</td><td>'+ LGArr[g][11] +'</td><td>'+ LGArr[g][12] +'</td></tr>';
+					 	  }
+							        	
+					lt +='<t/body>';
+					$('table#dmHeadCountSubdistrictLG').append(lt);
+			    }
+		 });
+		
+		
+
+				     //Add the % heading ((fw5hBPmOVFF / WBTvxZ47oip)*100)
+		$.getJSON("../api/analytics.json?dimension=dx:WBTvxZ47oip;fw5hBPmOVFF&dimension=ou:"
+			+ orgUnits	+ "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou", function(data){
+			
+				 var t;
+				 
+				 $.each( data, function( index, row ) {
+					 if (index == 'rows'){
+						 var col2Total = 0;
+					     var col3Total = 0;
+						  for (var i=0, il=row.length; i<il; i++) {
+							  t += '<tbody><tr>';
+							  var rowVal2 = setRowValue(row[i][4]);
+					       	  var rowVal3 = setRowValue(row[i][5]);
+					       	  
+					       	  var rowPercentage = (rowVal3 / rowVal2) * 100;
+					       		
+							  t += '<td style="text-align:left">'+row[i][1]+'</td><td>'+ formatCurrency(rowVal2) +'</td><td>'+ formatCurrency(rowVal3) +'</td><td>'+ rowPercentage.toFixed(2) +'</td>';
+							  
+							  col2Total += rowVal2;
+					          col3Total += rowVal3;
+						  }
+						 
+						  var totPercentage = (col3Total / col2Total)*100;
+						  t += '<tr><td><b>DISTRICT TOTAL </b></td><td><b>'+ formatCurrency(col2Total) +'</b></td><td><b>'+ formatCurrency(col3Total) +'</b></td><td><b>'+ totPercentage.toFixed(2) +'</b></td></tr><t/body>';
+					 }
+					 
+				 });
+				 $('table#popDataSub').append(t);
+				
+			});
+		
+		
+      $.getJSON("../api/analytics.json?dimension=co&dimension=dx:BhEM8Gxdfrr;DMSKrjNpl18;dkxXXecl1aJ;v4sTLyFKnTP;oEn5Llg6OL9;nhnAOLpNaXh;j1WUUwBc4s3;mN2MbdR7Nk4&filter=ou:"+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=co&rows=dx", function(data){
+
+    	  var t;
+		           
+		     $.each( data, function( index, row ) {
+	
+		        if (index == 'rows'){
+		        	var col4Total = 0, col5Total = 0, col6Total = 0, col7Total = 0, col8Total = 0, col9Total = 0, colBudgetTotal = 0, colExpenditureTotal = 0;
+			        
+		          for (var i=0, il=row.length; i<il; i++) {
+					t += '<tbody><tr>';
+		       		  			
+		       		var rowVal4 = setRowValue(row[i][4]);
+		       		var rowVal5 = setRowValue(row[i][5]);
+		       		var rowVal6 = setRowValue(row[i][6]);
+		       		var rowVal7 = setRowValue(row[i][7]);
+		       		var rowVal8 = setRowValue(row[i][8]);
+		       		var rowVal9 = setRowValue(row[i][9]);
+		       		  	
+		       		var budgetRowTotal = rowVal4 + rowVal5 + rowVal6;
+		       		var expenditureRowTotal = rowVal7 + rowVal8 + rowVal9;
+		       		
+		       		t += '<td style="text-align:left">' + row[i][1] +'</td><td>'+ formatCurrency(rowVal4.toFixed(2)) +'</td><td>' + formatCurrency(rowVal5.toFixed(2)) +'</td><td>'+ formatCurrency(rowVal6.toFixed(2)) +'</td><td>'+ formatCurrency(rowVal7.toFixed(2)) +'</td><td>'+ formatCurrency(rowVal8.toFixed(2)) +'</td><td>'+ formatCurrency(rowVal9.toFixed(2)) +'</td>';
+		       		  			
+		        	t += '<td>'+ formatCurrency(budgetRowTotal.toFixed(2)) +'</td>';
+		        	t += '<td>'+ formatCurrency(expenditureRowTotal.toFixed(2)) +'</td></tr>';
+		        		   	
+		        	budgetTotal = 0;
+		        	expenditureTotal = 0;
+		        	
+		        	col4Total += rowVal4;
+		        	col5Total += rowVal5;
+		        	col6Total += rowVal6;
+		        	col7Total += rowVal7;
+		        	col8Total += rowVal8;
+		        	col9Total += rowVal9;
+		        	colBudgetTotal += budgetRowTotal;
+		        	colExpenditureTotal += expenditureRowTotal;
+		       		  		//create a loop here for the cells <td>s ...create the <tr> before
+		     	 }
+		      	t += '<tr><td><b>TOTAL DISTRICT </b></td><td><b>'+ formatCurrency(col4Total.toFixed(2)) +'</b></td><td><b>'+ formatCurrency(col5Total.toFixed(2)) +'</b></td><td><b>'+ formatCurrency(col6Total.toFixed(2)) +'</b></td><td><b>'+ formatCurrency(col7Total.toFixed(2)) +'</b></td><td><b>'+ formatCurrency(col8Total.toFixed(2)) +'</b></td><td><b>'+ formatCurrency(col9Total.toFixed(2)) +
+		      	'</b></td><td><b>'+ formatCurrency(colBudgetTotal.toFixed(2)) +'</b></td><td><b>'+ formatCurrency(colExpenditureTotal.toFixed(2)) +'</b></td></tr><t/body>';  
+		         }
+		        
+		     });
+
+		           //insert a new table
+		           //t = '<table ...>'+t+'</table>';
+		           //$('div#subProgram').html(t); 
+
+		           //or "append" if you wish to insert the rows in an existing table
+		           $('table#subProgramTable').append(t)
+		        });
+		
+    //Access - Province
+		//$("#phcPopRatioProv").load("../api/analytics.html?dimension=dx:c10CFAluSYq;VkA3frIg0oR;NAiDMo8wJlc;OI3Jgoa6Gwx;LF6CMNHlHv8;FzqnBkuAGAZ;kpCSY8KiQdB&dimension=ou:"
+		//	+ orgUnits	+ "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou",function() {
+		$("#phcPopRatioProv").load("../api/analytics.html?dimension=dx:c10CFAluSYq;VkA3frIg0oR;NAiDMo8wJlc;LF6CMNHlHv8;FzqnBkuAGAZ;kpCSY8KiQdB&dimension=ou:"
+			+ orgUnits	+ "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou",function() {
+				var rowNum = 0;
+				$('#phcPopRatioProv table').find('tr').each(function () {
+					if (rowNum >= 1)
+					{
+						var $tr = $(this);
+					
+						$tr.children().each(function() {
+							var $td = $(this);
+							var parts = $td.text().split('.');
+							
+							if (parts.length > 1)
+							{
+								var val = $td.text();
+								var replacedPart = parseFloat(val);
+								$td.text(formatCurrency(replacedPart.toFixed(2)));
+							}
+						});
+					}
+					rowNum = rowNum + 1;
+				});
+			});
+		
+		//Access - Local Government
+		//$("#phcPopRatioLG").load("../api/analytics.html?dimension=dx:RciUfUjIIe9;uGyFpugSfeb;XHXNekHHtg6;hqzm4eskQ8n;gAZtPc8BRoN;H79wRILpfCK;pwEKqo97u7D&dimension=ou:"
+		//	+ orgUnits + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		$("#phcPopRatioLG").load("../api/analytics.html?dimension=dx:RciUfUjIIe9;uGyFpugSfeb;XHXNekHHtg6;gAZtPc8BRoN;H79wRILpfCK;pwEKqo97u7D&dimension=ou:"
+			+ orgUnits + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		
+		
+		$.getJSON("../api/analytics.json?dimension=dx:Z0L3cmmK8aR&dimension=ou:"
+			+ orgUnits + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou", function(data){
+				
+				 var t;
+				 
+				 $.each( data, function( index, row ) {
+					 if (index == 'rows'){
+						 var col2Total = 0;
+						  for (var i=0, il=row.length; i<il; i++) {
+							  t += '<tbody><tr>';
+							  var rowVal2 = setRowValue(row[i][4]);
+					       		
+							  t += '<td style="text-align:left">'+row[i][1]+'</td><td>'+ rowVal2 +'</td>';
+							  
+							  col2Total += rowVal2;
+						  }
+						 
+						  var totPercentage = (col2Total / row.length);
+						  t += '<tr><td><b>DISTRICT AVERAGE </b></td><td><b>'+ totPercentage.toFixed(2) +'</b></td></tr>';
+					 }
+					 
+				 });
+				 
+				 $('table#sdPHC').append(t);
+				 
+				 $.getJSON("../api/analytics.json?dimension=dx:Z0L3cmmK8aR&dimension=ou:"
+							+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou", function(data){
+								
+								var t;
+								 $.each( data, function( index, row ) {
+									 if (index == 'rows'){
+										 for (var i=0, il=row.length; i<il; i++) {
+											 weightedAve = setRowValue(row[i][4]);
+										 }
+									 }
+								 });
+								 
+								t += '<tr><td><b>WEIGHTED AVERAGE </b></td><td><b>'+ weightedAve.toFixed(2) +'</b></td></tr><t/body>';
+								  
+								 $('table#sdPHC tr:last').after(t);			
+					});
+				 
+			});
+		
+		
+		//Cost per headcount
+		$("#dmCostsHeadCount").load("../api/analytics.html?dimension=dx:Fg8VmPXbi1Q;ToA55XGzItv;&dimension=ou:"
+				+ orgUnits + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		
+		//PHC Utilization Rate /// VWwGsxyJkuw - OHH
+		$("#dmPHCUtilization").load("../api/analytics.html?dimension=dx:gRFZu0QJOew;&dimension=ou:"
+				+ orgUnits + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		
+		//Average Spent on Staff  // pG740CAIIwv
+		$("#dmAverageSpentOnStaff").load("../api/analytics.html?dimension=dx:pG740CAIIwv;Kgrv4PSxu3T&dimension=ou:"
+				+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+	
+		//7.4
+		$("#dmPropExpenditure").load("../api/analytics.html?dimension=dx:RxSjeZT8d9c;jattLcHmep7;vdGzW3qMB8R&dimension=ou:"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		//Provincial - Clinics
+		$("#patientRatioProv").load("../api/analytics.html?dimension=dx:oLjDAFJGuXb;CroFoGvmlSv;nchQVa1IELP;JxFITCwhNT3;aiX3TusrqID;xpQJmZwVG90;DjFvPznRRMy;VNXRBmpfS77;guXlT2ZIPVZ;STzussloP9J;AUhDIrrFnes;xfmdQzeCfq6;RhyUBeKbsVb&dimension=ou:"
+			+ orgUnits + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		
+		//Local Government - Clinics
+		$("#patientRatioProvLG")
+			.load("../api/analytics.html?dimension=dx:LxU7Yvh3Ukh;iMBv78qoBuN;S3b26olZPEc;Of4NDQh9bdX;Qlzv4V3VMBV;RKfq9Y9PRGs;mDtWS71DGIn;kJUIcJcDLlU;HWfOIUkYTwP;QklRuYwDWwh;GLJtfxHoTFS;edUbjCGhMbq;CpHlyj50sIE&dimension=ou:"
+			+ orgUnits + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		
+		//Provincial + Local Government
+		$("#patientRatioProvCHCs")
+			.load("../api/analytics.html?dimension=dx:bMnIGdaD3OS;ALo5ATrkEZn;s9lgzot9wWM;fNzOfOVy8dA;KkX9B3n4POn;Wo38BkOL2vq;CacY9sKFZuw;qp1Brntnmzh;BF7taQSTSTm;RqlrJ7IeoCC;E5yX9zNFCOv;TNXRz6PHgL4;iXq3WkcVHtN&dimension=ou:"
+			+ orgUnits	+ "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		
+		//Provincial + Local Government
+		$("#patientRatioProvCDCs")
+			.load("../api/analytics.html?dimension=dx:VdHvN4wEAaW;aVGH8qwPbSN;i6olXZcgHdU;Hv4GH7uofNZ;JtyiRIaSdtc;RhoYEyDyWKs;hVGYAVmzWjn;UPpuoU8c5Zc;lbbqOg1Pk00;vTtvAOA04dv;dQ1lHEFGekB;l4k7K9lS0v0;wBuQUZbNNDW&dimension=ou:"
+			+ orgUnits	+ "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		
+		//Provincial + Local Government Stand alone MOUs
+		$("#standaloneMOUs")
+			.load("../api/analytics.html?dimension=dx:x96XQNPjDqK;CcqgcCLYbGC;FQN48MmwXQl;l4gamkeZXY8;y2rgPbX8qIx;CDInzFruFa9;mLjV98yMvQD;RxRJJHiNVQD;HpH89OnHM7P;G2FDcfqg7cF;a6KMSlpYRXo;UDl9ury9r6M;lmvOxMtAo4x&dimension=ou:"
+			+ orgUnits + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		
+		$("#medicalOfficerTotal").load("../api/analytics.html?dimension=dx:d0M1IYACBT3;DojZiO17dA4&dimension=ou:"
+			+ orgUnits	+ "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		//Population to professional nurse
+		$("#nurseTotalRatio").load("../api/analytics.html?dimension=dx:SqlEUGjhuLR;eKRsMW0R0iA&dimension=ou:"
+			+ orgUnits	+ "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		//Sustainability - Prov 
+		$("#expendSubProdProv").load("../api/analytics.html?dimension=dx:BBRupJ9F9P0;YS1YkcyASjr;sI4FvfyovNE;mL6Vve4KEt3;fUnWy85bpJB;olIdrNqMpgB;nzG5A7G8wzK;XN3IrKfeh6V&dimension=ou:"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		
+		//Sustainability - Local Government
+		$("#expendSubProdLG").load("../api/analytics.html?dimension=dx:vAjnESFkbWO;juqBJ5OPOER;OEpGymFkVHO;qbnr0dQgSEb;QxWvH18XO1U;Srfp3Cju7LQ;aoVqMofkeps;I6PP1XkwYFj&dimension=ou:"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		
+		
+		$("#staffingTotCompensation").load("../api/analytics.html?dimension=dx:TuV1gkWYWtb;Mz6ktavCz0K;dFVTqCFXP2P;Tpn1pAYDXO4&dimension=ou:"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		$("#staffingOtherBenefits").load("../api/analytics.html?dimension=dx:FvSQAlBwD4R;wL038L2rCwX;KHNSI2W93XO;HWy0lj9d7dw&dimension=ou:"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		$("#staffingAgencyStaff").load("../api/analytics.html?dimension=dx:DyatV2Akm1j;WGQQrDyLGCJ;cC8ajb0t8E4;bXsKOqwxlmV&dimension=ou:"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		$("#subDistExpendRateProv").load("../api/analytics.html?dimension=dx:DK6tSewRywS;ep5CzjF3t0a&dimension=ou:"
+			+ orgUnits + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		$("#subDistExpendRateLG").load("../api/analytics.html?dimension=dx:UpBg0NhscvF;WAQKg8N9NSt&dimension=ou:"
+			+ orgUnits + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		$("#totalDistrictHospExpenditure").load("../api/analytics.html?dimension=dx:dNtOyXvgy3R;wuuw1PedHk8&dimension=ou:"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		$("#expenditureNonNegotiables")
+			.load("../api/analytics.html?dimension=dx:B5Ioid0dtxr;Ed6aJTNk9pp;FWNA78CLQkS;MlPpzK3aQen;NqilI8Toxxf;QPhprW2XDcb;SKI6vzpHXQk;hC0Z1FzaSUb;hSqKHRLhgVU;jN17Kuk2Pe6;upk1Tx3IJBF;yWPjdleRGKJ&dimension=ou:"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou",function() {
+				var rowNum = 0;
+				$('#expenditureNonNegotiables table').find('tr').each(function () {
+					if (rowNum >= 1)
+					{
+						var $tr = $(this);
+					
+						$tr.children().each(function() {
+							var $td = $(this);
+							var parts = $td.text().split('.');
+							
+							if (parts.length > 1)
+							{
+								var val = $td.text();
+								var replacedPart = parseFloat(val);
+								$td.text(replacedPart.toFixed(1));
+							}
+						});
+					}
+					rowNum = rowNum + 1;
+				});
+			});
+
+		$("#aloDistrict").load("../api/analytics.html?dimension=dx:RdOo4qLkKFP;stovFjqZZOA&dimension=ou:OU_GROUP-mkp9EI7WFN6;"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		/* Removed last dx item - on5Ogj6hP5Q
+		$("#ouExpenditureRate")
+		.load("../api/analytics.html?dimension=dx:H3ijz2KT5gc;Ook97L5aXit;T9hFa8tjQ1M;Y8fAeBgsq3u;hbkS6rxAx2s;iRBxR07q6QP;on5Ogj6hP5Q&dimension=ou:OU_GROUP-mkp9EI7WFN6;"
+		+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+		*/
+		$("#ouExpenditureRate")
+			.load("../api/analytics.html?dimension=dx:H3ijz2KT5gc;Ook97L5aXit;T9hFa8tjQ1M;Y8fAeBgsq3u;hbkS6rxAx2s;iRBxR07q6QP&dimension=ou:OU_GROUP-mkp9EI7WFN6;"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		$("#staffPatientDay")
+			.load("../api/analytics.html?dimension=dx:SiwpwWRaabd;UShHQ19f4X5;VCyqPsR7Qgc;WxH9z6RYKrr;XNHuKOMGstP&dimension=ou:OU_GROUP-mkp9EI7WFN6;"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		$("#nonNegotiableExpNN")
+			.load("../api/analytics.html?dimension=dx:D4tg30iinZW;QlYhz0iQnvo;QoJiB6x4jRr;V5jAT4Z8QTr;WUnRto2KPnh;cqS5OPBQQIq;gLaPy1CXhk0;gnfRtEjMnge;sNUGPc2vv2Y;sVD1ZMrASUj;wwFn9Kz0WDO;xhBPmh9wp6o&dimension=ou:OU_GROUP-mkp9EI7WFN6;"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		// TODO - TdH3H1vg8H9 ////old jN17Kuk2Pe6
+		$("#totalExpNotNegotiables")
+			.load("../api/analytics.html?dimension=dx:B5Ioid0dtxr;Ed6aJTNk9pp;FWNA78CLQkS;MlPpzK3aQen;NqilI8Toxxf;QPhprW2XDcb;SKI6vzpHXQk;hC0Z1FzaSUb;hSqKHRLhgVU;TdH3H1vg8H9;upk1Tx3IJBF;yWPjdleRGKJ&dimension=ou:OU_GROUP-mkp9EI7WFN6;"
+			+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou",function() {
+				var rowNum = 0;
+				$('#totalExpNotNegotiables table').find('tr').each(function () {
+					if (rowNum >= 1)
+					{
+						var $tr = $(this);
+					
+						$tr.children().each(function() {
+							var $td = $(this);
+							var parts = $td.text().split('.');
+							
+							if (parts.length > 1)
+							{
+								var val = $td.text();
+								var replacedPart = parseFloat(val);
+								$td.text(replacedPart.toFixed(1));
+							}
+						});
+					}
+					rowNum = rowNum + 1;
+				});
+			});
+
+		$("#pde")
+		.load("../api/analytics.html?dimension=dx:B2dpV41M1Ju;dsSVBykn7dF&dimension=ou:OU_GROUP-mkp9EI7WFN6;"
+		+ orgUnit.id + "&filter=pe:" + period + "&tableLayout=true&columns=dx&rows=ou");
+
+		
+// Charting, etc
+		var orgArray = [];
+
+		$.getJSON('../api/analytics.json?dimension=dx:RdOo4qLkKFP;stovFjqZZOA&dimension=ou:OU_GROUP-mkp9EI7WFN6;'
+			+ orgUnit.id + '&filter=pe:' + period + '&tableLayout=true&columns=dx&rows=ou',function(data) {
+ 			for (var i = 0, il = data.metaData.ou.length; i < il; i++) {
+				orgArray.push({id : data.metaData.ou[i]});
+			}
+
+			var y = JSON.stringify(orgArray);
+			var x = eval('(' + y + ')');
+			
+		var orgUnitsArray = [];	
+		
+			for (var i = 0, il = orgUnitChildren.length; i < il; i++) {
+				orgUnitsArray.push({id : orgUnitChildren[i].id});
+			}
+						
+			var orgUnitsJSON = JSON.stringify(orgUnitsArray);
+			var orgUnitsJSONIFY = eval('(' + orgUnitsJSON + ')');
+			
+
+		//Render Charts
+		Ext.onReady(function() {
+
+		});
+
+		function setLinks() {
+
+			DV.plugin.getChart({
+				url : base,
+				el : 'chartLengthOfStay',
+				type : 'bar',
+				columns : [ {dimension : 'in',items : [ {id : 'RdOo4qLkKFP'	} ]	} ],
+				rows :  [{dimension : 'ou',items : x	} ],
+				filters : [ {dimension : 'pe',items : [ {id : period} ]} ],
+				showData : true,
+			}); 
+			
+			DV.plugin.getChart({
+				url : base,
+				el : 'chartLengthOfStay2012',
+				type : 'bar',
+				columns : [ {dimension : 'in',items : [ {id : 'RdOo4qLkKFP'	} ]	} ],
+				rows :  [{dimension : 'ou',items : x	} ],
+				filters : [ {dimension : 'pe',items : [ {id : prevPeriod} ]	} ],
+				showData : true,
+			});
+
+			DV.plugin.getChart({
+				url : base,
+				el : 'chartBedUtilization',
+				type : 'bar',
+				columns : [ {dimension : 'in',items : [ {id : 'stovFjqZZOA'	} ]	} ],
+				rows : [{dimension : 'ou',items : x	} ],
+				filters : [ {dimension : 'pe',items : [ {id : period} ]	} ],
+				showData : true,
+			});
+
+			DV.plugin.getChart({
+				url : base,
+				el : 'chartBedUtilization2012',
+				type : 'bar',
+				columns : [ {dimension : 'in',items : [ {id : 'stovFjqZZOA'	} ]	} ],
+				rows : [{dimension : 'ou',items : x	} ],
+				filters : [ {dimension : 'pe',items : [ {id : prevPeriod} ]	} ],
+				showData : true,
+			});
+			
+			DV.plugin.getChart({
+				url : base,
+				el : 'chartEffiency',
+				type : 'column',
+				//columns : [ {dimension : 'in',items : [{id : 'ToA55XGzItv'}, {id : 'pG740CAIIwv'} ]}],
+				columns : [ {dimension: 'in', items: [{id: 'Fg8VmPXbi1Q'},{id: 'ToA55XGzItv'}]}],
+				rows : [ {dimension : 'pe',	items : [ {	id : period	} ]	} ],
+				filters : [ {dimension : 'ou',items : [ {id : orgUnit.id} ]}],
+				showData : false,
+			});
+			
+			DV.plugin.getChart({
+				url : base,
+				el : 'chartEffiency2012',
+				type : 'column',
+				//columns : [ {dimension : 'in',items : [{id : 'ToA55XGzItv'}, {id : 'pG740CAIIwv'} ]}],
+				columns : [ {dimension: 'in', items: [{id: 'Fg8VmPXbi1Q'},{id: 'ToA55XGzItv'}]}],
+				rows : [ {dimension : 'pe',	items : [ {	id : prevPeriod	} ]	} ],
+				filters : [ {dimension : 'ou',items : [ {id : orgUnit.id} ]}],
+				showData : false,
+			});
+			
+			DV.plugin.getChart({
+			    url: base,
+			    el: 'chartProportionalExp',
+			    type: 'pie',
+			    columns: [{dimension: 'ou', items: [{id: orgUnit.id }]}],
+			    rows: [{dimension: 'in', items: [ {id: 'jattLcHmep7'}, {id: 'RxSjeZT8d9c'}, {id: 'vdGzW3qMB8R'} ]}],
+				filters: [{dimension: 'pe', items: [{id: period} ] }],
+				showData: true,
+			});
+			
+			DV.plugin.getChart({
+			    url: base,
+			    el: 'chartProportionalExp2012',
+			    type: 'pie',
+			    columns: [{dimension: 'ou', items: [{id: orgUnit.id }]}],
+			    rows: [{dimension: 'in', items: [ {id: 'jattLcHmep7'}, {id: 'RxSjeZT8d9c'}, {id: 'vdGzW3qMB8R'} ]}],
+				filters: [{dimension: 'pe', items: [{id: prevPeriod} ] }],
+				showData: true,
+			});
+			
+			
+			DV.plugin.getChart({
+			    url: base,
+			    el: 'chartPopNurseMOU',
+			    type: 'column',
+			    columns: [{dimension: 'in', items: [ {id: 'DojZiO17dA4'}, {id: 'eKRsMW0R0iA'}]}],
+			    rows: [{dimension: 'ou', items: orgUnitsJSONIFY }],
+				filters: [{dimension: 'pe', items: [{id: period}]}],
+				showData: true,
+			});
+			
+			DV.plugin.getChart({
+			    url: base,
+			    el: 'chartPopNurseMOU2012',
+			    type: 'column',
+			    columns: [{dimension: 'in', items: [ {id: 'DojZiO17dA4'}, {id: 'eKRsMW0R0iA'}]}],
+			    rows: [{dimension: 'ou', items: orgUnitsJSONIFY }],
+				filters: [{dimension: 'pe', items: [{id: prevPeriod}]}],
+				showData: true,
+			});
+			
+		} //function setLinks
+		
+		setLinks();
+	}); //getJSON for charts
+
+		
+}); //document ready function
+</script>
+
+</head>
+<body>
+		<h1><span>District Health Expenditure Review</span></h1>
+		<h2><span>Custom Report</span></h2>
+		<p><span id="selectedDistrict"></span></p>
+		<p><span id="selectedProvince"></span></p>
+		<p><span>District Co-ordinator: ____________</span></p>
+		<p><span>Acknowledgements:</span></p>
+		<p><span>
+				<img width=275 height=138
+				src="../dhis-web-commons/flags/south_africa_department_of_health.png"
+				alt="National Department of Health" v:shapes="Picture_x0020_1">
+		</span>
+		<br>
+		</p>
+
+		<p><span >Abbreviations</span></p>
+		
+		<p class="break"><span></span></p>
+		
+		<h1><span>1. Demographic Data</span></h1>
+		
+		<table class="listTable gridTable" id = "dmPopDemographicData">
+		<thead>
+ 			<tr>
+  				<th><p><b><span>Organisation unit</span></b></p></th>
+  				<th><p><b><span>Value</span></b></p></th>
+ 			</tr>
+ 			
+ 		</thead>	
+ 
+		</table>
+		
+		<p><div id="dmPopDemographicData"></div></p>
+		
+		<h2><span>2. Population Pyramid</span></h2>
+		<p><span>
+		<!--  img id="pyramid2012" src=""></img></p>-->
+		<div id="pyramid" style="width: 600px; height: 600px;">
+		</div>
+		<!--  img id="pyramid" src=""></img></p> -->
+		</span>
+
+		<div>
+			<h1><span>3. Summary Data</span></h1>
+			
+		<table class="listTable gridTable" id = "popDataSub">
+		<thead>
+ 			<tr>
+  				<th><p><b><span>Organisation unit</span></b></p></th>
+  				<th><p><b><span>SD Tot Pop</span></b></p></th>
+  				<th><p><b><span>SD Pop uninsured</span></b></p></th>
+  				<th><p><b><span>% pop uninsured</span></b></p></th>
+ 			</tr>
+ 			
+ 		</thead>	
+ 
+		</table>
+			
+		<h2><span>4. Budget and Expenditure Sub programs [Raw data]</span></h2>
+			
+		<table class="listTable gridTable" id = "subProgramTable">
+		<thead>
+ 			<tr>
+  				<th width="9%" nowrap rowspan=2><p><b><span>BUDGET AND EXPENDITURE</span></b></p></th>
+  				<th width="15%" nowrap colspan=3><p><b><span>Budget: Adjusted Appropriation</span></b></p></th>
+  				<th width="15%" nowrap colspan=3><p><b><span>Expenditure</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>TOTAL</span></b></p></th>
+ 			</tr>
+ 			<tr height:32.25pt'>
+ 			
+  				<th><p><span>Province</span></p></th>
+  				<th><p><span>Transfer to LG</span></p></th>
+  				<th><p><span>LG Own</span></p></th>
+  				<th><p><span>Province</span></p></th>
+  				<th><p><span>Transfer to LG</span></p></th>
+  				<th><p><span>LG Own</span></p></th>
+  				<th><p><span>Budget</span></p></th>
+  				<th><p><span>Expenditure</span></p></th>
+ 			</tr>
+ 		</thead>	
+ 
+		</table>
+
+		</div>
+		
+		<div>
+			<h1><span>5. Access</span></h1>
+			<h2><span>5.1 Population to PHC facility (Sub-District) [Number]</span></h2>
+			<h3><span>5.1.1 Provincial</span></h3>
+			<p><div id="phcPopRatioProv"></div></p>
+			<h3><span>5.1.2 Local Government</span></h3>
+			<p><div id="phcPopRatioLG"></div></p>
+		</div>
+	
+		<div>
+			<h1><span>6. Equity</span></h1>
+			<h2><span>6.1 PHC expenditure</span></h2>
+			
+		<table class="listTable gridTable" id = "sdPHC">
+		<thead>
+ 			<tr>
+  				<th><p><b><span>Organisation unit</span></b></p></th>
+  				<th><p><b><span>Per Uninsured Population</span></b></p></th>
+ 			</tr>
+ 		</thead>	
+ 
+		</table>
+			
+			<h2><span>7. Efficiency</span></h2>
+			
+			<h2><span>7.1 Headcount and number of facilities at Subdistrict level</span></h2>
+ 			
+			<h2><span>7.1.1 Provincial</span></h2>
+		<table class="listTable gridTable" id = "dmHeadCountSubdistrictProv">
+			<thead>
+ 			<tr>
+  				<th width="9%" nowrap rowspan=2><p><b><span>Organisation unit</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>CDC</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>CHC</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>Clinic</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>Health Post</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>Mobile</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>Satellite</span></b></p></th>
+ 			</tr>
+ 			<tr height:32.25pt'>
+ 			
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+ 			</tr>
+ 			</thead>
+		</table>
+		
+		<h2><span>7.1.2 Local Government</span></h2>
+		<table class="listTable gridTable" id = "dmHeadCountSubdistrictLG">
+			<thead>
+ 			<tr>
+  				<th width="9%" nowrap rowspan=2><p><b><span>Organisation unit</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>CDC</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>CHC</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>Clinic</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>Health Post</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>Mobile</span></b></p></th>
+  				<th width="15%" nowrap colspan=2><p><b><span>Satellite</span></b></p></th>
+ 			</tr>
+ 			<tr height:32.25pt'>
+ 			
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+  				<th><p><span>Headcount</span></p></th>
+  				<th><p><span>Facility count</span></p></th>
+ 			</tr>
+ 			</thead>
+		</table>	
+			
+			<h2><span>7.2 Cost per headcount</span></h2>
+			<p><div id="dmCostsHeadCount"></div></p>
+			<p><span>
+			<div id="chartEffiency2012" style="width:680px; height:400px; vertical-align: top;  display: inline-block; padding: 10px;"></div>
+			<div id="chartEffiency" style="width:680px; height:400px; vertical-align: top;  display: inline-block; padding: 10px;"></div>
+			</span></p>
+			
+			<h2><span>7.3 PHC Utilization Rate</span></h2>
+			<p><div id="dmPHCUtilization"></div></p>
+			<p><span>
+			
+			<h2><span>7.4 Average spent on staff</span></h2> 
+			<p><div id="dmAverageSpentOnStaff"></div></p>
+			
+			<h2><span>7.5 District Finance Proportional Expenditure [%]</span></h2>
+			<p><div id="dmPropExpenditure"></div></p>
+			<p><span>
+				<div id="chartProportionalExp2012" style="width:680px; height:400px; vertical-align: top;  display: inline-block; padding: 10px;"></div>
+				<div id="chartProportionalExp" style="width:680px; height:400px; vertical-align: top;  display: inline-block; padding: 10px;"></div>
+			</span></p>
+			<h1><span>8. Number of patients to Staff type in Facilities (Sub-District)</span></h1>
+			KEY
+			<table>
+				<tr>
+					<td>PN</td><td>Professional Nurse</td><td></td><td>Clin. Other</td><td>Clinical Staff other</td><td></td><td>NA</td><td>Nurse Assistant</td>
+				</tr>
+				<tr>
+					<td>DC</td><td>Data Capturer</td><td></td><td>Spec.</td><td>Specialist</td><td></td><td>Pharm</td><td>Pharmacist</td>
+				</tr>
+				<tr>
+					<td>PA Basic</td><td>Pharmacy Assistant Basic</td><td></td><td>GW/C</td><td>General Worker/Cleaner</td><td></td><td>SN</td><td>Staff Nurse</td>
+				</tr>
+				<tr>
+					<td>PA Post Basic</td><td>Pharmacy Assistant Post Basic</td><td></td><td>Couns.</td><td>Counsellor</td><td></td><td>Admin</td><td>Administrator</td>
+				</tr>
+				<tr>
+					<td>MO</td><td>Medical Officer</td><td></td><td></td><td></td><td></td><td></td><td></td>
+				</tr>
+			</table>
+			<h2><span>8.1 Provincial</span></h2>
+			
+			<h3><span>8.1.1 Clinics</span></h3>
+			<p><div id="patientRatioProv"></div></p>
+			<h2><span>8.2 Local Government</span></h2>
+			
+			<h3><span>8.2.1 Clinics</span></h3>
+			<p><div id="patientRatioProvLG"></div></p>
+			<h2><span>8.3 Provincial + Local Government</span></h2>
+			
+			<h3><span>8.3.1 CHCs</span></h3>
+			<p><div id="patientRatioProvCHCs"></div></p>
+			<h3><span>8.3.2 CDCs</span></h3>
+			<p><div id="patientRatioProvCDCs"></div></p>
+			<!--  
+			<h3><span>3.3.3 Stand-Alone MOUs</span></h3>
+			<h3><div id="standaloneMOUs"></div></h3>
+			-->			
+			<h1>8.4 Population to Staff [number]</h1>
+			
+			<h2><span>8.4.1 Population to Medical Officer (Sub-District)</span></h2>
+			<p><div id="medicalOfficerTotal"></div></p>
+		</div>
+		<div>
+			<h2>8.4.2 Population to Professional Nurse (Sub-District)</h2>
+			<p><div id="nurseTotalRatio"></div></p>
+			
+			<p><span>
+			<div id="chartPopNurseMOU2012" style="width:680px; height:400px; vertical-align: top;  display: inline-block; padding: 5px;"></div>
+			<div id="chartPopNurseMOU" style="width:680px; height:400px; vertical-align: top;  display: inline-block; padding: 5px;"></div>
+			</span>
+			</p>
+	
+		</div>
+		
+			<b></b>
+			
+		<div>
+			<h1><span>9. Sustainability</span></h1>
+			
+			<h2><span>9.1 Over/Under Expenditure Rate by Sub-Programs (District) [%]</span></h2>
+			<p><span>- Negative number means over-spending</span></p>
+			<p><span>- 0 means perfect spending</span></p>
+			<p><span>- Positive number means under-spending</span></p>
+			
+			<h3><span>9.1.1 Provincial</span></h3>
+			<p><div id="expendSubProdProv"></div></p>
+			
+			<h3><span>9.1.2 Local Government</span> <span></span></h3>
+			<p><div id="expendSubProdLG"></div></p>
+			<h2><span>9.2 Over/Under Expenditure Rate on Staffing (District) [%]</span></h2>
+			<p><span>- Negative number means over-spending</span></p>
+			<p><span>- 0 means perfect spending</span></p>
+			<p><span>-	Positive number means under-spending</span></p>
+			
+			<h3><span>9.2.1 Compensation of Employees</span></h3>
+			<p><div id="staffingTotCompensation"></div></p>
+			
+			<h3><span>9.2.2 ST/HRD/Other Benefits</span> <span></span></h3>
+			<p><div id="staffingOtherBenefits"></div></p>
+			<h3><span>9.2.3 Agency Staff</span> <span></span></h3>
+			<p><div id="staffingAgencyStaff"></div></p>
+			<h2><span>9.3 Over/Under Expenditure Rate (Sub-District) [%]</span></h2>
+			<p><span>- Negative number means over-spending</span></p>
+			<p><span>- 0 means perfect spending</span></p>
+			<p><span>- Positive number means under-spending</span></p>
+			<h3><span>9.3.1 Provincial</span></h3>
+			<p><div id="subDistExpendRateProv"></div></p>
+				
+			<h3><span>9.3.2 Local Government</span> <span></span></h3>
+			<p><div id="subDistExpendRateLG"></div></p>
+				
+		</div>
+			<b></b>
+		<div>
+			<h1>10. District Hospitals</h1>
+			<h2>10.1 PDE</h2>
+			<p><div id="pde"></div></p>
+			
+			<h2>10.2 Patient Day Equivalent to Staff Type (District Hospital) [Number]</h2>
+			<p><div id="staffPatientDay"></div></p>
+				
+			<h2>10.3 Total District Hospital Expenditure</h2>
+			<p><div id="totalDistrictHospExpenditure"></div></p>
+				
+			<h2>10.4 Over/Under Expenditure Rate (District Hospital) [%]</h2>
+			<p><span>- Negative number means over-spending</span></p>
+			<p><span>- 0 means perfect spending</span></p>
+			<p><span>- Positive number means under-spending</span></p>
+			<p><div id="ouExpenditureRate"></div></p>
+				
+			<h2>10.5 Average Length of Stay, Bed Utilization Rate [%] (District Hospital)</h2>
+			<p><div id="aloDistrict"></div></p>
+			<p>
+			<span>
+			<div id="chartLengthOfStay2012" style="width:680px; height:400px; vertical-align: top;  display: inline-block; padding: 10px;"></div>
+			<div id="chartLengthOfStay"	style="width:680px; height:400px; vertical-align: top;  display: inline-block; padding: 10px;"></div>
+				
+			</span>
+			</p>
+			<p><span>
+				<div id="chartBedUtilization2012" style="width:680px; height:400px; vertical-align: top;  display: inline-block; padding: 10px;"></div>
+				<div id="chartBedUtilization"	style="width:680px; height:400px; vertical-align: top;  display: inline-block; padding: 10px;"></div>
+			</span>	
+			</p>
+			
+		</div>
+		<div>
+			<h1>11. Non-Negotiable Finance Items</h1>
+			
+			<h2><span>11.1 Over/Under Expenditure Rate on Non-Negotiable Items (District) [%]</span></h2>
+			<p><span>- Negative number means over-spending</span></p>
+			<p><span>- 0 means perfect spending</span></p>
+			<p><span>- Positive number means under-spending</span></p>
+			<p><div id="expenditureNonNegotiables"></div></p>
+			
+			<h2><span>11.2 Over/Under Expenditure Rate on Non-Negotiable Items (District Hospitals) [%]</span></h2>
+			<p><span>- Negative number means over-spending</span></p>
+			<p><span>- 0 means perfect spending</span></p>
+			<p><span>- Positive number means under-spending</span></p>
+			<p><div id="totalExpNotNegotiables"></div></p>
+			
+			<h2><span>11.3 Non-negotiable item expenditure per Patient Day Equivalent [Rands]</span></h2>
+			<p><div id="nonNegotiableExpNN"></div></p>
+			<br>
+			<p><b>Submitted by</b></p>
+			<p><b><span>Date</span></b></p>
+		</div>
+		<br>
+		
+		<div>
+		<h1>DHER Plan of Action</h1>
+		<br>
+		<p>Please fill in the relevant detail under each heading. This document should assist you in developing your Operational and District Health Plans.</p>
+		<br>
+		<h3>What were the district&#39s main achievements?</h3>
+		<br>
+		<p>According to the findings of your DHER custom report, list the district&#39s main achievements along with an explanation for this success.</p>
+		<br>
+		<h3>What were the districts five main challenges?</h3>
+		<br>
+		<p>According to the findings of your DHER custom report, list the five main challenges hindering service delivery in the district. Use the data from the custom report to verify your findings.</p>
+		<br>
+		<h3>How will the district sustain these achievements?</h3>
+		<br>
+		<p>Provide an action plan for sustaining the gains made.</p>
+		<br>
+		<h3>How will the district address the 5 main challenges</h3>
+		<br>
+		<p>Provide an action plan for addressing the five main challenges, as highlighted by the DHER.</p>
+		<br>
+		<h3>Timeline</h3>
+		<p>Add a table denoting expected timelines for interventions/proposed actions</p>
+		
+		<h3>Monitoring and Evaluation</h3>
+		<br>
+		<h3>How will the district monitor success or failure? Include indicators and data source.</h3>
+		</div>
+</body>
+</html>
